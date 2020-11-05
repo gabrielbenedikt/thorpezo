@@ -1,0 +1,8 @@
+*.swp
+*.log
+*.tmp
+*.pyc
+*.ipynb
+__pycache__/
+*.py[cod]
+*$py.class
