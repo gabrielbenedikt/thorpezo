@@ -55,7 +55,7 @@ class PCbase():
                                  bytesize=serial.EIGHTBITS,
                                  parity=serial.PARITY_NONE,
                                  stopbits=serial.STOPBITS_ONE,
-                                 timeout=1)
+                                 timeout=0.005)
         
         self.buf = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, 1), newline='\r', line_buffering = True)
     
@@ -140,15 +140,7 @@ class PCbase():
             return self.msg('dacstep='+str(step))
         else:
             raise RangeError
-    
-    def inc_v(self,voltage):
-        """Increments the current channel voltage by resolution set in dacsteps (Adjustment range: 0 to 65536, limited by factory calibrated limit)"""
-        return self.msg('Up arrow')
-    
-    def dec_v(self):
-        """Decrements the current channel voltage by resolution set in dacsteps (Adjustment range: 0 to 65536, limited by factory calibrated limit)"""
-        return self.msg('Down arrow')
-
+        
     def get_name(self):
         """Returns the friendly name"""
         return self.msg('friendly?')
@@ -268,10 +260,3 @@ class MDT693B(PCbase):
         """Sets the maximum output voltage limit for Z axis"""
         return self.msg('zmax='+str(v))
     
-    def inc_chan(self):
-        """Increases channel setting and returns value (order: master scan if enabled, z axis, y axis, x axis)"""
-        return self.msg('Left arrow')
-    
-    def dec_chan(self):
-        """Decreases channel setting and returns value (order: master scan if enabled, z axis, y axis, x axis) """
-        return self.msg('Right arrow')
