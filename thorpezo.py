@@ -11,7 +11,7 @@ class DeviceError:
     """Unsupported device"""
     pass
 
-class Thorpiedo():
+class Thorpezo():
     def __init__(self,dev):
         self.opencon(dev)
         info = self.msg('id?')
