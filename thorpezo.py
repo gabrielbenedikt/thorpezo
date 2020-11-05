@@ -2,6 +2,7 @@
 
 import serial
 import io
+import threading
 
 class RangeError:
     """Parameter out of range"""
@@ -13,15 +14,19 @@ class DeviceError:
 
 class Thorpezo():
     def __init__(self,dev):
+        self.readresponse=True
         self.opencon(dev)
-        info = self.msg('id?')
+        self.info = self.msg('id?')
         self.closecon()
-        if "MDT694B" in info[0]:
-            self.device=MDT694B(dev)
-        elif "MDT693B" in info[0]:
-            self.device=MDT693B(dev)
-        else:
-            raise DeviceError
+        try:
+            if "MDT694B" in self.info[0]:
+                self.device=MDT694B(dev)
+            elif "MDT693B" in self.info[0]:
+                self.device=MDT693B(dev)
+            else:
+                raise DeviceError
+        except:
+            print(self.info)
             
     def opencon(self,dev):
         self.ser = serial.Serial(port=dev,
@@ -29,25 +34,43 @@ class Thorpezo():
                                  bytesize=serial.EIGHTBITS,
                                  parity=serial.PARITY_NONE,
                                  stopbits=serial.STOPBITS_ONE,
-                                 timeout=1)
+                                 timeout=0.01)
         
-        self.buf = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, 1), newline='\r', line_buffering = True)
+        self.buf = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, 33554432), newline='\r', line_buffering = True)
     
     def closecon(self):
         self.ser.close()
 
     def msg(self, msg):
         self.buf.write(msg+'\n')
-        self.buf.flush()
-        lines=self.buf.readlines()
-        lines = [line.strip() for line in lines if not line.strip() == '']
-        if lines[-1]=='>':
-            lines = lines[:-1]
-        return lines
+        if self.readresponse:
+            lines=self.buf.readlines()
+            lines = [line.strip() for line in lines if not line.strip() == '']
+            if lines[-1]=='>':
+                lines = lines[:-1]
+            return lines
+        else:
+            return ""
+    
+    
+    #self.ser_read_thread=threading.Thread(target=self.read_ser)
+    #self.ser_read_thread.start()
+    
+    #def handle_ser_msg(self,msg):
+        #print(msg)
+    
+    #def read_ser(self):
+        #while True:
+            #if self.ser.is_open:
+                #line=self.buf.readline()
+                #self.handle_ser_msg(line)
 
 class PCbase():
     def __init__(self,dev):
         self.opencon(dev)
+        self.readresponse=True
+        self.ser_read_thread=threading.Thread(target=self.ser_read_thread)
+        self.ser_read_thread.start()
         
     def opencon(self,dev):
         self.ser = serial.Serial(port=dev,
@@ -55,21 +78,31 @@ class PCbase():
                                  bytesize=serial.EIGHTBITS,
                                  parity=serial.PARITY_NONE,
                                  stopbits=serial.STOPBITS_ONE,
-                                 timeout=0.005)
+                                 timeout=0.01)
         
-        self.buf = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, 1), newline='\r', line_buffering = True)
+        self.buf = io.TextIOWrapper(io.BufferedRWPair(self.ser, self.ser, 33554432), newline='\r', line_buffering = True)
     
     def closecon(self):
         self.ser.close()
+        
+    def ignore_serial_read(self,ignore):
+        self.readresponse= not ignore
+    
+    def ser_read_thread(self):
+        while True:
+            if not self.readresponse:
+                line=self.buf.readline()
 
     def msg(self, msg):
         self.buf.write(msg+'\n')
-        self.buf.flush()
-        lines=self.buf.readlines()
-        lines = [line.strip() for line in lines if not line.strip() == '']
-        if lines[-1]=='>':
-            lines = lines[:-1]
-        return lines
+        if self.readresponse:
+            lines=self.buf.readlines()
+            lines = [line.strip() for line in lines if not line.strip() == '']
+            if lines[-1]=='>':
+                lines = lines[:-1]
+            return lines
+        else:
+            return ['']
     
     def get_commands(self):
         """List the available commands"""
