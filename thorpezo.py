@@ -70,8 +70,9 @@ class PCbase():
         self.opencon(dev)
         self.readresponse=True
         self.ser_read_thread=threading.Thread(target=self.ser_read_thread)
+        self.ser_read_thread.daemon=True
         self.ser_read_thread.start()
-        
+
     def opencon(self,dev):
         self.ser = serial.Serial(port=dev,
                                  baudrate=115200,
