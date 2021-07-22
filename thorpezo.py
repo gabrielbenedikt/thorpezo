@@ -4,13 +4,15 @@ import serial
 import io
 import threading
 
-class RangeError:
+class RangeError(Exception):
     """Parameter out of range"""
-    pass
+    def __init__(self, message):
+        self.message = message
 
-class DeviceError:
+class DeviceError(Exception):
     """Unsupported device"""
-    pass
+    def __init__(self, message):
+        self.message = message
 
 class Thorpezo():
     def __init__(self,dev):
@@ -51,19 +53,6 @@ class Thorpezo():
             return lines
         else:
             return ""
-    
-    
-    #self.ser_read_thread=threading.Thread(target=self.read_ser)
-    #self.ser_read_thread.start()
-    
-    #def handle_ser_msg(self,msg):
-        #print(msg)
-    
-    #def read_ser(self):
-        #while True:
-            #if self.ser.is_open:
-                #line=self.buf.readline()
-                #self.handle_ser_msg(line)
 
 class PCbase():
     def __init__(self,dev):
